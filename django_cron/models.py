@@ -28,7 +28,7 @@ class Job(models.Model):
     
     # time between job runs (in seconds) // default: 1 day
     run_frequency = models.PositiveIntegerField(default=86400)
-    last_run = models.DateTimeField(default=datetime.now())
+    last_run = models.DateTimeField(auto_now_add=True)
     
     instance = models.TextField()
     args = models.TextField()
