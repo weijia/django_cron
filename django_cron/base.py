@@ -36,7 +36,7 @@ import models
 # in reality if you have a multithreaded server, it may get checked
 # more often that this number suggests, so keep an eye on it...
 # default value: 300 seconds == 5 min
-polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 300)
+polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 20)
 
 
 class Job(object):
@@ -91,9 +91,7 @@ class CronScheduler(object):
             job.save()
 
     def get_current_time_with_tz(self):
-        current = datetime.now(tz=utc)
-        current = timezone.make_aware(datetime.datetime.now(), timezone.get_default_timezone())
-        current = datetime.utcnow().replace(utc)
+        current = datetime.utcnow().replace(tzinfo=utc)
         return current
 
     def execute(self):
@@ -110,7 +108,8 @@ class CronScheduler(object):
         #        one is already executing a job (only occurs with
         #         multi-threaded servers)
         if status.executing:
-            return
+            pass
+            #return
 
         status.executing = True
         try:
