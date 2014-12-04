@@ -36,7 +36,7 @@ import models
 # in reality if you have a multithreaded server, it may get checked
 # more often that this number suggests, so keep an eye on it...
 # default value: 300 seconds == 5 min
-polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 20)
+polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 300)
 
 
 class Job(object):
