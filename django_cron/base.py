@@ -87,6 +87,8 @@ class CronScheduler(object):
             # if the job throws an error, just remove it from
             # the queue. That way we can find/fix the error and
             # requeue the job manually
+            import traceback
+            traceback.print_exc()
             job.queued = False
             job.save()
 

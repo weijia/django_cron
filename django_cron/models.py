@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 from django.db import models
-from datetime import datetime
+
 
 class Job(models.Model):
     name = models.CharField(max_length=100)
