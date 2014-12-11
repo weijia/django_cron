@@ -35,6 +35,12 @@ class Job(models.Model):
     kwargs = models.TextField()
     queued = models.BooleanField(default=True)
 
+    def save(self, force_insert=False, force_update=False, using=None):
+        self.instance = self.instance.replace("\r", "")
+        self.args = self.args.replace("\r", "")
+        self.kwargs = self.kwargs.replace("\r", "")
+        return super(Job, self).save(force_insert, force_update, using)
+
 
 class Cron(models.Model):
     executing = models.BooleanField(default=False)
