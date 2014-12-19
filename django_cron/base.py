@@ -56,7 +56,6 @@ class Job(object):
         pass
 
 
-
 class CronScheduler(object):
 
     def register(self, job_class, *args, **kwargs):
@@ -117,9 +116,9 @@ class CronScheduler(object):
         #    print "quitting thread", os.getppid(), self.parent_pid
         #    return()  # or whatever you want to do to quit the Worker process
         if self.stop_flag:
-            print "quitting cron"
+            print "quitting django cron"
             return()
-        print "parent not exit, go on"
+        #print "parent not exit, go on"
 
         # This is important for 2 reasons:
         # 1. It keeps us for running more than one instance of the
