@@ -20,7 +20,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
-import atexit
 import cPickle
 from threading import Timer
 from datetime import datetime
@@ -29,7 +28,6 @@ from django.dispatch import dispatcher
 from django.conf import settings
 from django.utils import timezone
 from django.utils.timezone import utc
-import sys
 
 from signals import cron_done
 import models
@@ -79,20 +77,6 @@ class CronScheduler(object):
         job.run_frequency = job_instance.run_every
         job.save()
 
-    #Ref: http://stackoverflow.com/questions/2542610/python-daemon-doesnt-kill-its-kids
-    def is_parent_alive(self):
-        try:
-            # try to call Parent
-            print "parent pid:", self.parent_pid
-            os.kill(self.parent_pid, 0)
-        except OSError:
-            # *beeep* oh no! The phone's disconnected!
-            print "exception"
-            return False
-        else:
-            # *ring* Hi mom!
-            return True
-
     def exe_job(self, job):
         try:
             inst = cPickle.loads(str(job.instance))
@@ -121,7 +105,6 @@ class CronScheduler(object):
         print "parent pid is", self.parent_pid
         self.stop_flag = False
         self.execute()
-
 
     def execute(self):
         """
@@ -154,9 +137,7 @@ class CronScheduler(object):
             # this will fail if you're debugging, so we want it
             # to fail silently and start the timer again so we 
             # can pick up where we left off once debugging is done
-            self.timer = Timer(polling_frequency, self.execute)
-            self.timer.setDaemon(True)
-            self.timer.start()
+            Timer(polling_frequency, self.execute).start()
             return
 
         jobs = models.Job.objects.all()
@@ -171,49 +152,11 @@ class CronScheduler(object):
         status.save()
 
         # Set up for this function to run again
-        self.timer = Timer(polling_frequency, self.execute)
-        self.timer.setDaemon(True)
-        self.timer.start()
+        Timer(polling_frequency, self.execute).start()
 
     def stop(self):
         self.stop_flag = True
 
 
 cronScheduler = CronScheduler()
-"""
 
-import signal
-original_sigint_handler = None
-original_sigterm_handler = None
-
-
-def signal_handler(signal, frame):
-    print('You pressed Ctrl+C!')
-    cancel_timer()
-
-    #print original_handler
-    if not (original_sigint_handler is None):
-        original_sigint_handler(signal, frame)
-
-
-def cancel_timer():
-    if not (cronScheduler.timer is None):
-        print "Timer is not None, cancel it."
-        cronScheduler.timer.cancel()
-        cronScheduler.timer = None
-        print "Timer cancel complete."
-
-
-def signal_term_handler(signal, frame):
-    print('You pressed Ctrl+C!')
-    cancel_timer()
-    #print original_handler
-    if not (original_sigterm_handler is None):
-        original_sigterm_handler(signal, frame)
-
-
-original_sigint_handler = signal.signal(signal.SIGINT, signal_handler)
-original_sigterm_handler = signal.signal(signal.SIGTERM, signal_term_handler)
-
-atexit.register(cancel_timer)
-"""
