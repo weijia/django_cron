@@ -31,12 +31,14 @@ from django.utils.timezone import utc
 
 from signals import cron_done
 import models
+import os
+import sys
 
 # how often to check if jobs are ready to be run (in seconds)
 # in reality if you have a multithreaded server, it may get checked
 # more often that this number suggests, so keep an eye on it...
 # default value: 300 seconds == 5 min
-polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 300)
+polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 20)
 
 
 class Job(object):
@@ -54,7 +56,12 @@ class Job(object):
         pass
 
 
+
 class CronScheduler(object):
+    def __init__(self):
+        super(CronScheduler, self).__init__()
+        self.parent_pid = os.getpid()
+
     def register(self, job_class, *args, **kwargs):
         """
         Register the given Job with the scheduler class
@@ -72,6 +79,20 @@ class CronScheduler(object):
         job.kwargs = cPickle.dumps(kwargs)
         job.run_frequency = job_instance.run_every
         job.save()
+
+    #Ref: http://stackoverflow.com/questions/2542610/python-daemon-doesnt-kill-its-kids
+    def is_parent_alive(self):
+        try:
+            # try to call Parent
+            print "parent pid:", self.parent_pid
+            os.kill(self.parent_pid, 0)
+        except OSError:
+            # *beeep* oh no! The phone's disconnected!
+            print "exception"
+            return False
+        else:
+            # *ring* Hi mom!
+            return True
 
     def exe_job(self, job):
         try:
@@ -96,11 +117,25 @@ class CronScheduler(object):
         current = datetime.utcnow().replace(tzinfo=utc)
         return current
 
+    def start_execute(self):
+        self.parent_pid = os.getpid()
+        print "parent pid is", self.parent_pid
+        self.stop_flag = False
+        self.execute()
+
+
     def execute(self):
         """
         Queue all Jobs for execution
         """
         status, created = models.Cron.objects.get_or_create(pk=1)
+
+        #if not self.is_parent_alive():
+        #    # woe is me! My Parent has died!
+        #    print "quitting thread", os.getppid(), self.parent_pid
+        #    return()  # or whatever you want to do to quit the Worker process
+        if self.stop_flag:
+            return()
 
         # This is important for 2 reasons:
         # 1. It keeps us for running more than one instance of the
@@ -136,6 +171,9 @@ class CronScheduler(object):
 
         # Set up for this function to run again
         Timer(polling_frequency, self.execute).start()
+
+    def stop(self):
+        self.stop_flag = True
 
 
 cronScheduler = CronScheduler()
