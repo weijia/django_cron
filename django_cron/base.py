@@ -38,7 +38,7 @@ import sys
 # in reality if you have a multithreaded server, it may get checked
 # more often that this number suggests, so keep an eye on it...
 # default value: 300 seconds == 5 min
-polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 20)
+polling_frequency = getattr(settings, "CRON_POLLING_FREQUENCY", 300)
 
 
 class Job(object):
@@ -101,8 +101,8 @@ class CronScheduler(object):
         return current
 
     def start_execute(self):
-        self.parent_pid = os.getpid()
-        print "parent pid is", self.parent_pid
+        #self.parent_pid = os.getpid()
+        #print "parent pid is", self.parent_pid
         self.stop_flag = False
         self.execute()
 
@@ -117,7 +117,9 @@ class CronScheduler(object):
         #    print "quitting thread", os.getppid(), self.parent_pid
         #    return()  # or whatever you want to do to quit the Worker process
         if self.stop_flag:
+            print "quitting cron"
             return()
+        print "parent not exit, go on"
 
         # This is important for 2 reasons:
         # 1. It keeps us for running more than one instance of the
