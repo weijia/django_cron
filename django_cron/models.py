@@ -41,6 +41,12 @@ class Job(models.Model):
         self.kwargs = self.kwargs.replace("\r", "")
         return super(Job, self).save(force_insert, force_update, using)
 
+    def __unicode__(self):
+        return unicode("%s" % self.name)
+
 
 class Cron(models.Model):
     executing = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return unicode("Cron, is Executing: %s" % str(self.executing))

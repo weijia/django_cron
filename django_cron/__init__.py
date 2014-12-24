@@ -22,10 +22,11 @@ THE SOFTWARE.
 """
 from base import Job, cronScheduler
 
+g_cron_file_name = 'django_cron_file'
 
 def autodiscover():
     """
-    Auto-discover INSTALLED_APPS cron.py modules and fail silently when
+    Auto-discover INSTALLED_APPS django_cron_file.py modules and fail silently when
     not present. This forces an import on them to register any cron jobs they
     may want.
     """
@@ -33,10 +34,10 @@ def autodiscover():
     from django.conf import settings
 
     for app in settings.INSTALLED_APPS:
-        # For each app, we need to look for an cron.py inside that app's
+        # For each app, we need to look for an django_cron_file.py inside that app's
         # package. We can't use os.path here -- recall that modules may be
         # imported different ways (think zip files) -- so we need to get
-        # the app's __path__ and look for cron.py on that path.
+        # the app's __path__ and look for django_cron_file.py on that path.
 
         # Step 1: find out the app's __path__ Import errors here will (and
         # should) bubble up, but a missing __path__ (which is legal, but weird)
@@ -47,18 +48,19 @@ def autodiscover():
         except AttributeError:
             continue
 
-        # Step 2: use imp.find_module to find the app's admin.py. For some
+        # Step 2: use imp.find_module to find the app's django_cron.py. For some
         # reason imp.find_module raises ImportError if the app can't be found
         # but doesn't actually try to import the module. So skip this app if
         # its admin.py doesn't exist
         try:
-            imp.find_module('cron', app_path)
+
+            imp.find_module(g_cron_file_name, app_path)
         except ImportError:
             continue
 
         # Step 3: import the app's cron file. If this has errors we want them
         # to bubble up.
-        __import__("%s.cron" % app)
+        __import__("%s.%s" % (app, g_cron_file_name))
 
     # Step 4: once we find all the cron jobs, start the cronScheduler
     cronScheduler.start_execute()
