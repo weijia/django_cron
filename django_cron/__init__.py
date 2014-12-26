@@ -20,9 +20,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
+import os
 from base import Job, cronScheduler
 
 g_cron_file_name = 'django_cron_file'
+
+
+def is_in_server_process():
+    if os.environ.get('RUN_MAIN', '') == 'true':
+        return True
+    else:
+        return False
+
 
 def autodiscover():
     """
@@ -63,4 +72,11 @@ def autodiscover():
         __import__("%s.%s" % (app, g_cron_file_name))
 
     # Step 4: once we find all the cron jobs, start the cronScheduler
-    cronScheduler.start_execute()
+    if not is_in_server_process():
+        cronScheduler.start_execute()
+    else:
+        print "No scheduler in server process"
+
+
+def stop():
+    cronScheduler.stop()

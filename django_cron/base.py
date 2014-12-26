@@ -58,6 +58,10 @@ class Job(object):
 
 class CronScheduler(object):
 
+    def __init__(self):
+        super(CronScheduler, self).__init__()
+        self.timer = None
+
     def register(self, job_class, *args, **kwargs):
         """
         Register the given Job with the scheduler class
@@ -138,7 +142,8 @@ class CronScheduler(object):
             # this will fail if you're debugging, so we want it
             # to fail silently and start the timer again so we 
             # can pick up where we left off once debugging is done
-            Timer(polling_frequency, self.execute).start()
+            self.timer = Timer(polling_frequency, self.execute)
+            self.timer.start()
             return
 
         jobs = models.Job.objects.all()
@@ -153,10 +158,13 @@ class CronScheduler(object):
         status.save()
 
         # Set up for this function to run again
-        Timer(polling_frequency, self.execute).start()
+        self.timer = Timer(polling_frequency, self.execute)
+        self.timer.start()
 
     def stop(self):
         self.stop_flag = True
+        if not (self.timer is None):
+            self.timer.cancel()
 
 
 cronScheduler = CronScheduler()
