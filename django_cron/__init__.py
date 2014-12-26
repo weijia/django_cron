@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 import os
+import sys
 from base import Job, cronScheduler
 
 g_cron_file_name = 'django_cron_file'
@@ -80,3 +81,8 @@ def autodiscover():
 
 def stop():
     cronScheduler.stop()
+
+
+def start_cron_when_run_server():
+    if sys.argv[1] == "runserver":
+        autodiscover()
